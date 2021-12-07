@@ -1,4 +1,4 @@
-# File Shared
+# File Share
 
 Minimalistic file share service
 
