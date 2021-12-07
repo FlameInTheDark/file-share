@@ -2,7 +2,7 @@
 
 Minimalistic file share service
 
-##Used:
+## Used:
 
 * PostgreSQL
 * MinIO S3
