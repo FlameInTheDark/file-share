@@ -1,0 +1,72 @@
+version: '3.8'
+
+networks:
+  shared-network:
+    driver: bridge
+
+services:
+  file-api:
+    container_name: file-api
+    networks:
+      shared-network:
+    image: "file-api-amd64:latest"
+    command: [ "run" ]
+    entrypoint: [ "./api" ]
+    restart: always
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/healthz" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+
+  db:
+    container_name: file-db
+    networks:
+      - shared-network
+    image: postgres:13.3-alpine
+    ports:
+      - 5433:5432
+    expose:
+      - 5433
+
+  db-migrate:
+    image: migrate/migrate:v4.14.1
+    networks:
+      shared-network:
+    volumes:
+      - type: bind
+        source: ${PWD}/db/migrations
+        target: /migrations
+    depends_on:
+      - db
+    restart: on-failure:10
+
+  storage:
+    container_name: file-storage
+    networks:
+      shared-network:
+        aliases:
+          # For localhost access, add the following to your /etc/hosts
+          # 127.0.0.1       my-minio-localhost-alias
+          # When accessing the minio container on a server with an accessible dns, use the following
+          - my-minio-localhost-alias
+    image: "minio/minio:RELEASE.2021-02-23T20-05-01Z"
+    ports:
+      - 9000:9000
+    expose:
+      - 9000
+    command: [ "server", "/data" ]
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  wait:
+    image: dokku/wait
+    networks:
+      - shared-network

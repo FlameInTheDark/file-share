@@ -1,0 +1,8 @@
+version: "1"
+packages:
+  - name: "filesdb"
+    path: "business/models/filesdb"
+    queries: "db/schema/files.sql"
+    schema: "db/schema/files.sql"
+    emit_json_tags: true
+    emit_interface: true
